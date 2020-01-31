@@ -22,3 +22,11 @@ Factory.blueprint('App/Models/User', (faker, i, data = {}) => {
     ...data
   }
 })
+
+Factory.blueprint('App/Models/Deliveryman', (faker, i, data = {}) => {
+  return {
+    name: faker.name(),
+    email: faker.email(),
+    ...data
+  }
+})

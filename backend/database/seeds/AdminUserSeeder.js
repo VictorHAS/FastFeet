@@ -15,14 +15,22 @@
 
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const User = use('App/Models/User')
+const Role = use('Adonis/Acl/Role')
 
 class AdminUserSeeder {
   async run() {
-    await User.create({
+    const adminUser = await User.create({
       name: 'Distribuidora FastFeet',
       email: 'admin@fastfeet.com',
       password: '123456'
     })
+
+    const admin = await Role.create({
+      slug: 'admin',
+      name: 'administrator'
+    })
+
+    await adminUser.roles().attach([admin.id])
   }
 }
 

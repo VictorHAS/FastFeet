@@ -13,7 +13,7 @@ class RecipientSchema extends Schema {
       table.string('complement').nullable()
       table.string('state').notNullable()
       table.string('city').notNullable()
-      table.string('CEP').notNullable()
+      table.string('zip_code').notNullable()
       table.timestamps()
     })
   }

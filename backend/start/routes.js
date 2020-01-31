@@ -18,6 +18,10 @@ const Route = use('Route')
 
 Route.post('sessions', 'SessionController.store').validator('Session')
 
+Route.get('/files/:file', 'FileController.show')
+
 Route.group(() => {
-  Route.post('/recipients', 'RecipientController.store').middleware('is:admin')
-}).middleware('auth')
+  Route.post('/file', 'FileController.store')
+  Route.post('/recipients', 'RecipientController.store')
+  Route.resource('/deliveryman', 'DeliverymanController')
+}).middleware(['auth', 'is:admin'])

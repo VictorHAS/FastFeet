@@ -13,10 +13,7 @@ test("it shouldn't create new recipient without admin role", async ({
   assert,
   client
 }) => {
-  const adminUser = await Factory.model('App/Models/User').create({
-    email: 'admin@fastfeet.com',
-    password: '123456'
-  })
+  const adminUser = await Factory.model('App/Models/User').create()
 
   const response = await client
     .post('/recipients')
@@ -27,23 +24,24 @@ test("it shouldn't create new recipient without admin role", async ({
       number: '66A',
       state: 'RN',
       city: 'Parnamirim',
-      CEP: '59147-140'
+      zip_code: '59147-140'
     })
     .end()
 
   response.assertStatus(403)
 })
 
-test('it shouldt create new recipient', async ({ assert, client }) => {
-  const adminUser = await Factory.model('App/Models/User').create({
-    email: 'admin@fastfeet.com',
-    password: '123456'
-  })
+test('it should create new recipient', async ({ assert, client }) => {
+  const adminUser = await Factory.model('App/Models/User').create()
 
-  const admin = await Role.create({
-    slug: 'admin',
-    name: 'administrator'
-  })
+  let admin = await Role.findBy('slug', 'admin')
+
+  if (!admin) {
+    admin = await Role.create({
+      slug: 'admin',
+      name: 'administrator'
+    })
+  }
 
   await adminUser.roles().attach([admin.id])
 
@@ -56,7 +54,7 @@ test('it shouldt create new recipient', async ({ assert, client }) => {
       number: '66A',
       state: 'RN',
       city: 'Parnamirim',
-      CEP: '59147-140'
+      zip_code: '59147-140'
     })
     .end()
 

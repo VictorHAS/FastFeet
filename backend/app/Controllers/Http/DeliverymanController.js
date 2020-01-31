@@ -4,62 +4,61 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 
-/** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
-const Recipient = use('App/Models/Recipient')
+const Deliveryman = use('App/Models/Deliveryman')
 
 /**
- * Resourceful controller for interacting with recipients
+ * Resourceful controller for interacting with deliverymen
  */
-class RecipientController {
+class DeliverymanController {
   /**
-   * Show a list of all recipients.
-   * GET recipients
+   * Show a list of all deliverymen.
+   * GET deliverymen
    *
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index({ request, response, view }) {}
+  async index() {
+    const deliverymen = await Deliveryman.all()
 
-  /**
-   * Create/save a new recipient.
-   * POST recipients
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async store({ request }) {
-    const data = request.only([
-      'name',
-      'street',
-      'number',
-      'complement',
-      'state',
-      'city',
-      'zip_code'
-    ])
-
-    const recipient = await Recipient.create(data)
-
-    return recipient
+    return deliverymen
   }
 
   /**
-   * Display a single recipient.
-   * GET recipients/:id
+   * Create/save a new deliveryman.
+   * POST deliverymen
+   *
+   * @param {object} ctx
+   * @param {Request} ctx.request
+   * @param {Response} ctx.response
+   */
+  async store({ request, response }) {
+    const data = request.only(['name', 'avatar_id', 'email'])
+
+    const deliveryman = await Deliveryman.create(data)
+
+    return response.status(201).json(deliveryman)
+  }
+
+  /**
+   * Display a single deliveryman.
+   * GET deliverymen/:id
    *
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show({ params, request, response, view }) {}
+  async show({ params }) {
+    const deliveryman = await Deliveryman.find(params.id)
+
+    return deliveryman
+  }
 
   /**
-   * Update recipient details.
-   * PUT or PATCH recipients/:id
+   * Update deliveryman details.
+   * PUT or PATCH deliverymen/:id
    *
    * @param {object} ctx
    * @param {Request} ctx.request
@@ -68,8 +67,8 @@ class RecipientController {
   async update({ params, request, response }) {}
 
   /**
-   * Delete a recipient with id.
-   * DELETE recipients/:id
+   * Delete a deliveryman with id.
+   * DELETE deliverymen/:id
    *
    * @param {object} ctx
    * @param {Request} ctx.request
@@ -78,4 +77,4 @@ class RecipientController {
   async destroy({ params, request, response }) {}
 }
 
-module.exports = RecipientController
+module.exports = DeliverymanController
