@@ -16,6 +16,12 @@
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use('Route')
 
-Route.get('/', () => {
-  return { greeting: 'Hello world in JSON' }
-})
+Route.post('sessions', 'SessionController.store').validator('Session')
+
+Route.get('/files/:file', 'FileController.show')
+
+Route.group(() => {
+  Route.post('/file', 'FileController.store')
+  Route.post('/recipients', 'RecipientController.store')
+  Route.resource('/deliveryman', 'DeliverymanController')
+}).middleware(['auth', 'is:admin'])

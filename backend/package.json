@@ -6,13 +6,13 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node ace test"
+    "test": "nyc --reporter=text-summary node ace test"
   },
   "keywords": [
     "adonisjs",
     "adonis-app"
   ],
-  "author": "",
+  "author": "Victor Hermes",
   "license": "UNLICENSED",
   "private": true,
   "husky": {
@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@adonisjs/ace": "^5.0.8",
+    "@adonisjs/antl": "^2.0.7",
     "@adonisjs/auth": "^3.0.7",
     "@adonisjs/bodyparser": "^2.0.5",
     "@adonisjs/cors": "^1.0.7",
@@ -37,13 +38,16 @@
     "@adonisjs/framework": "^5.0.9",
     "@adonisjs/ignitor": "^2.0.8",
     "@adonisjs/lucid": "^6.1.3",
+    "@adonisjs/mail": "^3.0.10",
     "@adonisjs/validator": "^5.0.6",
     "@adonisjs/vow": "^1.0.17",
+    "adonis-acl": "^1.1.1",
     "pg": "^7.18.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^8.3.5",
     "@commitlint/config-conventional": "^8.3.4",
+    "commitizen": "^4.0.3",
     "cz-conventional-changelog": "3.1.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.0",
@@ -55,6 +59,7 @@
     "eslint-plugin-standard": "^4.0.1",
     "husky": "^4.2.1",
     "lint-staged": "^10.0.4",
+    "nyc": "^15.0.0",
     "prettier": "^1.19.1",
     "sqlite3": "^4.1.1"
   },
