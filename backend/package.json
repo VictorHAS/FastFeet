@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "test": "nyc --reporter=html node ace test"
+    "test": "nyc --reporter=text-summary node ace test"
   },
   "keywords": [
     "adonisjs",
@@ -42,13 +42,12 @@
     "@adonisjs/validator": "^5.0.6",
     "@adonisjs/vow": "^1.0.17",
     "adonis-acl": "^1.1.1",
-    "istanbul": "^0.4.5",
     "pg": "^7.18.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^8.3.5",
     "@commitlint/config-conventional": "^8.3.4",
-    "cz-conventional-changelog": "^3.1.0",
+    "cz-conventional-changelog": "3.1.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.0",
     "eslint-config-standard": "^14.1.0",
@@ -60,7 +59,8 @@
     "husky": "^4.2.1",
     "lint-staged": "^10.0.4",
     "prettier": "^1.19.1",
-    "sqlite3": "^4.1.1"
+    "sqlite3": "^4.1.1",
+    "nyc": "^15.0.0"
   },
   "autoload": {
     "App": "./app"
