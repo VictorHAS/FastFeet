@@ -17,14 +17,14 @@
   "private": true,
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged",
+      "pre-push": "yarn test --bail"
     }
   },
   "lint-staged": {
-    "test/**/*.js": [
+    "*.js": [
       "eslint --fix",
       "prettier --write",
-      "yarn test --bail",
       "git add"
     ]
   },
