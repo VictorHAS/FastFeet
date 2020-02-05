@@ -5,7 +5,10 @@
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 
 const Deliveryman = use('App/Models/Deliveryman')
+const Helpers = use('Helpers')
+const File = use('App/Models/File')
 
+const Env = use('Env')
 /**
  * Resourceful controller for interacting with deliverymen
  */
@@ -20,7 +23,9 @@ class DeliverymanController {
    * @param {View} ctx.view
    */
   async index() {
-    const deliverymen = await Deliveryman.all()
+    const deliverymen = await Deliveryman.query()
+      .with('avatar')
+      .fetch()
 
     return deliverymen
   }
@@ -53,6 +58,8 @@ class DeliverymanController {
   async show({ params }) {
     const deliveryman = await Deliveryman.find(params.id)
 
+    await deliveryman.load('avatar')
+
     return deliveryman
   }
 
@@ -64,7 +71,37 @@ class DeliverymanController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update({ params, request, response }) {}
+  async update({ params, request, response }) {
+    const data = request.only(['name', 'email'])
+    const avatar = request.file('avatar', {
+      types: ['image'],
+      size: '2mb'
+    })
+    const deliveryman = await Deliveryman.findOrFail(params.id)
+
+    if (avatar) {
+      await avatar.move(Helpers.tmpPath('uploads'), {
+        name: `${new Date().getTime()}.${avatar.subtype}`
+      })
+
+      if (!avatar.moved()) {
+        return avatar.error()
+      }
+
+      const avatarId = await File.create({
+        name: avatar.fileName,
+        path: `${Env.get('APP_URL')}/files/${avatar.fileName}`
+      })
+
+      deliveryman.avatar_id = avatarId.id
+    }
+    deliveryman.merge(data)
+
+    await deliveryman.save()
+    await deliveryman.load('avatar')
+
+    return deliveryman
+  }
 
   /**
    * Delete a deliveryman with id.
@@ -74,7 +111,11 @@ class DeliverymanController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy({ params, request, response }) {}
+  async destroy({ params }) {
+    const deliveryman = await Deliveryman.find(params.id)
+
+    await deliveryman.delete()
+  }
 }
 
 module.exports = DeliverymanController
