@@ -1,10 +1,11 @@
-const { test, trait, before } = use('Test/Suite')('Deliveryman')
+const { test, trait, before } = use('Test/Suite')('Admin management')
 
 /** @type {import('@adonisjs/lucid/src/Factory')} */
 const Factory = use('Factory')
+const Mail = use('Mail')
+const Helpers = use('Helpers')
 const Role = use('Adonis/Acl/Role')
 const Deliveryman = use('App/Models/Deliveryman')
-const Helpers = use('Helpers')
 
 trait('Test/ApiClient')
 trait('DatabaseTransactions')
@@ -23,12 +24,12 @@ before(async () => {
   await adminUser.roles().attach([admin.id])
 })
 
-test("it shouldn't be able to use deliveryman routes without admin role", async ({
+test("it shouldn't be able to use admin routes without admin role", async ({
   client
 }) => {
   const user = await Factory.model('App/Models/User').create()
 
-  const response = await client
+  const deliveryman = await client
     .post('/deliveryman')
     .loginVia(user, 'jwt')
     .send({
@@ -37,7 +38,22 @@ test("it shouldn't be able to use deliveryman routes without admin role", async 
     })
     .end()
 
-  response.assertStatus(403)
+  deliveryman.assertStatus(403)
+
+  const recipient = await client
+    .post('/recipients')
+    .loginVia(user, 'jwt')
+    .send({
+      name: 'Victor',
+      street: 'Rua Novo Oriente',
+      number: '66A',
+      state: 'RN',
+      city: 'Parnamirim',
+      zip_code: '59147-140'
+    })
+    .end()
+
+  recipient.assertStatus(403)
 })
 
 test('it should be able to create new deliveryman if not exists with avatar', async ({
@@ -147,4 +163,70 @@ test('it should be able to delete a deliveryman', async ({
   const checkDeliveryman = await Deliveryman.find(deliveryman.id)
 
   assert.isNull(checkDeliveryman)
+})
+
+test('it should create new recipient', async ({ assert, client }) => {
+  const response = await client
+    .post('/recipients')
+    .loginVia(adminUser, 'jwt')
+    .send({
+      name: 'Victor',
+      street: 'Rua Novo Oriente',
+      number: '66A',
+      state: 'RN',
+      city: 'Parnamirim',
+      zip_code: '59147-140'
+    })
+    .end()
+
+  response.assertStatus(200)
+  assert.exists(response.body.id)
+})
+
+test('it should create new delivery', async ({ assert, client }) => {
+  Mail.fake()
+
+  const recipient = await client
+    .post('/recipients')
+    .loginVia(adminUser, 'jwt')
+    .send({
+      name: 'Victor',
+      street: 'Rua Novo Oriente',
+      number: '66A',
+      state: 'RN',
+      city: 'Parnamirim',
+      zip_code: '59147-140'
+    })
+    .end()
+  recipient.assertStatus(200)
+
+  const deliveryman = await client
+    .post('/deliveryman')
+    .loginVia(adminUser, 'jwt')
+    .send({
+      name: 'Victor Entregador',
+      email: 'victorhermes@gmail.com'
+    })
+    .end()
+  deliveryman.assertStatus(201)
+
+  const response = await client
+    .post('/delivery')
+    .loginVia(adminUser, 'jwt')
+    .send({
+      product: 'Produto test',
+      deliveryman_id: deliveryman.body.id,
+      recipient_id: recipient.body.id
+    })
+    .end()
+
+  response.assertStatus(200)
+
+  const recentEmail = Mail.pullRecent()
+  assert.equal(recentEmail.message.to[0].address, deliveryman.body.email)
+
+  Mail.restore()
+  assert.exists(response.body.id)
+  assert.equal(response.body.deliveryman.email, deliveryman.body.email)
+  assert.equal(response.body.recipient.name, recipient.body.name)
 })

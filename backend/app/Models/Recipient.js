@@ -4,6 +4,9 @@
 const Model = use('Model')
 
 class Recipient extends Model {
+  deliveries() {
+    return this.hasMany('App/Models/Delivery')
+  }
 }
 
 module.exports = Recipient
