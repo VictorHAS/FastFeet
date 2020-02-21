@@ -230,3 +230,51 @@ test('it should create new delivery', async ({ assert, client }) => {
   assert.equal(response.body.deliveryman.email, deliveryman.body.email)
   assert.equal(response.body.recipient.name, recipient.body.name)
 })
+
+test('it should be able to list deliveries', async ({ assert, client }) => {
+  const recipient = await client
+    .post('/recipients')
+    .loginVia(adminUser, 'jwt')
+    .send({
+      name: 'Victor',
+      street: 'Rua Novo Oriente',
+      number: '66A',
+      state: 'RN',
+      city: 'Parnamirim',
+      zip_code: '59147-140'
+    })
+    .end()
+  recipient.assertStatus(200)
+
+  const deliveryman = await client
+    .post('/deliveryman')
+    .loginVia(adminUser, 'jwt')
+    .send({
+      name: 'Victor Entregador',
+      email: 'victorhermes@gmail.com'
+    })
+    .end()
+  deliveryman.assertStatus(201)
+
+  const delivery = await client
+    .post('/delivery')
+    .loginVia(adminUser, 'jwt')
+    .send({
+      product: 'Produto test',
+      deliveryman_id: deliveryman.body.id,
+      recipient_id: recipient.body.id
+    })
+    .end()
+
+  delivery.assertStatus(200)
+
+  const response = await client
+    .get('/delivery')
+    .loginVia(adminUser, 'jwt')
+    .end()
+
+  response.assertStatus(200)
+  assert.equal(response.body.data[0].deliveryman.name, deliveryman.body.name)
+  assert.equal(response.body.data[0].recipient.name, recipient.body.name)
+  assert.equal(response.body.data[0].product, delivery.body.product)
+})

@@ -24,7 +24,16 @@ class DeliveryController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index() {}
+  async index({ request }) {
+    const page = request.headers('page')
+
+    const deliveries = await Delivery.query()
+      .with('recipient')
+      .with('deliveryman')
+      .paginate(page || 1)
+
+    return deliveries
+  }
 
   /**
    * Create/save a new delivery.
