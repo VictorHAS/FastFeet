@@ -7,6 +7,10 @@ class Deliveryman extends Model {
   avatar() {
     return this.belongsTo('App/Models/File', 'avatar_id', 'id')
   }
+
+  deliveries() {
+    return this.hasMany('App/Models/Delivery')
+  }
 }
 
 module.exports = Deliveryman

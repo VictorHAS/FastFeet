@@ -24,4 +24,5 @@ Route.group(() => {
   Route.post('/file', 'FileController.store')
   Route.post('/recipients', 'RecipientController.store')
   Route.resource('/deliveryman', 'DeliverymanController')
+  Route.resource('/delivery', 'DeliveryController')
 }).middleware(['auth', 'is:admin'])
