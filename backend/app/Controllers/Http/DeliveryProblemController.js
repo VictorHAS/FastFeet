@@ -90,13 +90,14 @@ class DeliveryProblemController {
       ['emails.cancelation_order'],
       {
         product: delivery.product,
-        description: problem.description
+        description: problem.description,
+        deliveryman: deliveryJson.deliveryman.name
       },
       message => {
         message
           .to(deliveryJson.deliveryman.email)
           .from('noreply@fastfeet.com.br', 'FastFeet')
-          .subject(`Entrega #${Delivery.id} cancelada!`)
+          .subject(`Entrega #${deliveryJson.id} cancelada!`)
       }
     )
   }
