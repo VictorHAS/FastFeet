@@ -25,3 +25,21 @@ test('it should return JWT token when session created', async ({
   response.assertStatus(200)
   assert.exists(response.body.token)
 })
+
+test("it shouldn't return JWT, wrong credentials", async ({
+  assert,
+  client
+}) => {
+  await Factory.model('App/Models/User').create()
+
+  const response = await client
+    .post('/sessions')
+    .send({
+      email: 'teste@gmail.com',
+      password: 'asdasd'
+    })
+    .end()
+
+  response.assertStatus(401)
+  assert.equal(response.body.error.message, "Email or password doesn't match")
+})

@@ -30,3 +30,29 @@ Factory.blueprint('App/Models/Deliveryman', (faker, i, data = {}) => {
     ...data
   }
 })
+
+Factory.blueprint('App/Models/Recipient', (faker, i, data = {}) => {
+  return {
+    name: faker.name(),
+    street: faker.street(),
+    number: faker.geohash(),
+    state: faker.state(),
+    city: faker.city(),
+    zip_code: faker.zip(),
+    ...data
+  }
+})
+
+Factory.blueprint('App/Models/Delivery', (faker, i, data = {}) => {
+  return {
+    product: faker.sentence({ words: 2 }),
+    ...data
+  }
+})
+
+Factory.blueprint('App/Models/DeliveryProblem', (faker, i, data = {}) => {
+  return {
+    description: faker.sentence(),
+    ...data
+  }
+})

@@ -25,7 +25,7 @@ class DeliverySchema extends Schema {
         .integer('signature_id')
         .unsigned()
         .references('id')
-        .inTable('signatures')
+        .inTable('files')
         .onDelete('SET NULL')
         .onUpdate('CASCADE')
       table.string('product')

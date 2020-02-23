@@ -11,3 +11,4 @@ tmp
 database/*.sqlite
 
 .nyc_output
+coverage

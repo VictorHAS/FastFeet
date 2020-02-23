@@ -10,7 +10,7 @@ const Recipient = use('App/Models/Recipient')
 /**
  * Resourceful controller for interacting with recipients
  */
-class RecipientController {
+class RecipientAdminController {
   /**
    * Show a list of all recipients.
    * GET recipients
@@ -20,7 +20,21 @@ class RecipientController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index({ request, response, view }) {}
+  async index({ request }) {
+    const page = request.header('page')
+    const { q } = request.get()
+
+    let recipients
+    if (q) {
+      recipients = await Recipient.query()
+        .where('name', 'iLIKE', `%${q}%`)
+        .paginate(page || 1)
+    } else {
+      recipients = await Recipient.query().paginate(page || 1)
+    }
+
+    return recipients
+  }
 
   /**
    * Create/save a new recipient.
@@ -55,7 +69,11 @@ class RecipientController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show({ params, request, response, view }) {}
+  async show({ params }) {
+    const delivery = await Recipient.find(params.id)
+
+    return delivery
+  }
 
   /**
    * Update recipient details.
@@ -65,7 +83,23 @@ class RecipientController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update({ params, request, response }) {}
+  async update({ params, request }) {
+    const data = request.only([
+      'name',
+      'street',
+      'number',
+      'state',
+      'city',
+      'zip_code'
+    ])
+
+    const recipient = await Recipient.find(params.id)
+
+    recipient.merge(data)
+    await recipient.save()
+
+    return recipient
+  }
 
   /**
    * Delete a recipient with id.
@@ -75,7 +109,11 @@ class RecipientController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy({ params, request, response }) {}
+  async destroy({ params }) {
+    const recipient = await Recipient.find(params.id)
+
+    await recipient.delete()
+  }
 }
 
-module.exports = RecipientController
+module.exports = RecipientAdminController

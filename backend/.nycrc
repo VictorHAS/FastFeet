@@ -3,7 +3,12 @@
   "check-coverage": false,
   "exclude": [
     "coverage/**",
+    "server.js",
+    ".eslintrc.js",
     "packages/*/test/**",
+    "app/Models",
+    "database",
+    "app/Middleware/**",
     "test/**",
     "test{,-*}.{js,cjs,mjs,ts}",
     "**/*{.,-}test.{js,cjs,mjs,ts}",
