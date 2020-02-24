@@ -12,7 +12,7 @@ const Env = use('Env')
 /**
  * Resourceful controller for interacting with deliverymen
  */
-class DeliverymanController {
+class DeliverymanAdminController {
   /**
    * Show a list of all deliverymen.
    * GET deliverymen
@@ -22,10 +22,22 @@ class DeliverymanController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index() {
-    const deliverymen = await Deliveryman.query()
-      .with('avatar')
-      .fetch()
+  async index({ request }) {
+    const page = request.header('page')
+    const { q } = request.get()
+
+    let deliverymen
+
+    if (q) {
+      deliverymen = await Deliveryman.query()
+        .where('name', 'iLIKE', `%${q}%`)
+        .with('avatar')
+        .paginate(page || 1)
+    } else {
+      deliverymen = await Deliveryman.query()
+        .with('avatar')
+        .paginate(page || 1)
+    }
 
     return deliverymen
   }
@@ -118,4 +130,4 @@ class DeliverymanController {
   }
 }
 
-module.exports = DeliverymanController
+module.exports = DeliverymanAdminController

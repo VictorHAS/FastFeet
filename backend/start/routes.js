@@ -20,9 +20,22 @@ Route.post('sessions', 'SessionController.store').validator('Session')
 
 Route.get('/files/:file', 'FileController.show')
 
-Route.group(() => {
-  Route.post('/file', 'FileController.store')
-  Route.post('/recipients', 'RecipientController.store')
-  Route.resource('/deliveryman', 'DeliverymanController')
-  Route.resource('/delivery', 'DeliveryController')
+Route.post('/file', 'FileController.store')
+
+Route.group('Deliveryman Routes', () => {
+  Route.get('/deliveryman/:id/deliveries', 'OrderController.index')
+  Route.put('/deliveryman/deliveries/:id', 'OrderController.update')
+  Route.get('/delivery/:id/problems', 'DeliveryProblemController.show')
+  Route.post('/delivery/:id/problems', 'DeliveryProblemController.store')
+})
+
+Route.group('Admin Routes', () => {
+  Route.resource('/recipient', 'RecipientAdminController').apiOnly()
+  Route.resource('/deliveryman', 'DeliverymanAdminController').apiOnly()
+  Route.resource('/delivery', 'DeliveryAdminController').apiOnly()
+  Route.get('/problem', 'DeliveryProblemController.index')
+  Route.delete(
+    '/problem/:id/cancel-delivery',
+    'DeliveryProblemController.destroy'
+  )
 }).middleware(['auth', 'is:admin'])

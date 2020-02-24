@@ -10,11 +10,14 @@ const Deliveryman = use('App/Models/Deliveryman')
 const Recipient = use('App/Models/Recipient')
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Delivery = use('App/Models/Delivery')
-const Mail = use('Mail')
+
+const Bull = use('Rocketseat/Bull')
+const Job = use('App/Jobs/NewDeliveryEmail')
+
 /**
  * Resourceful controller for interacting with deliveries
  */
-class DeliveryController {
+class DeliveryAdminController {
   /**
    * Show a list of all deliveries.
    * GET delivery
@@ -26,11 +29,21 @@ class DeliveryController {
    */
   async index({ request }) {
     const page = request.headers('page')
+    const { q } = request.get()
 
-    const deliveries = await Delivery.query()
-      .with('recipient')
-      .with('deliveryman')
-      .paginate(page || 1)
+    let deliveries
+    if (q) {
+      deliveries = await Delivery.query()
+        .where('product', 'iLIKE', `%${q}%`)
+        .with('recipient')
+        .with('deliveryman')
+        .paginate(page || 1)
+    } else {
+      deliveries = await Delivery.query()
+        .with('recipient')
+        .with('deliveryman')
+        .paginate(page || 1)
+    }
 
     return deliveries
   }
@@ -50,12 +63,12 @@ class DeliveryController {
       'recipient_id'
     ])
 
-    const deliveryman = await Deliveryman.findOrFail(deliveryman_id)
+    const deliveryman = await Deliveryman.find(deliveryman_id)
     if (!deliveryman)
       return response
         .status(404)
         .send({ error: { message: 'Deliveryman not found' } })
-    const recipient = await Recipient.findOrFail(recipient_id)
+    const recipient = await Recipient.find(recipient_id)
     if (!recipient)
       return response
         .status(404)
@@ -69,19 +82,11 @@ class DeliveryController {
 
     await delivery.loadMany(['deliveryman', 'recipient'])
 
-    await Mail.send(
-      ['emails.new_delivery'],
-      {
-        name: deliveryman.name,
-        product
-      },
-      message => {
-        message
-          .to(deliveryman.email)
-          .from('noreply@fastfeet.com.br', 'FastFeet')
-          .subject('Novo produto disponível para retirada')
-      }
-    )
+    Bull.add(Job.key, {
+      name: deliveryman.name,
+      product,
+      to: deliveryman.email
+    })
 
     return delivery
   }
@@ -95,7 +100,13 @@ class DeliveryController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show({ params }) {}
+  async show({ params }) {
+    const delivery = await Delivery.find(params.id)
+
+    await delivery.loadMany(['recipient', 'deliveryman'])
+
+    return delivery
+  }
 
   /**
    * Update delivery details.
@@ -105,7 +116,16 @@ class DeliveryController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update({ params, request, response }) {}
+  async update({ params, request }) {
+    const data = request.only(['product', 'deliveryman_id', 'recipient_id'])
+
+    const delivery = await Delivery.find(params.id)
+    delivery.merge(data)
+    await delivery.save()
+    await delivery.loadMany(['recipient', 'deliveryman'])
+
+    return delivery
+  }
 
   /**
    * Delete a delivery with id.
@@ -115,7 +135,11 @@ class DeliveryController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy({ params }) {}
+  async destroy({ params }) {
+    const delivery = await Delivery.find(params.id)
+
+    await delivery.delete()
+  }
 }
 
-module.exports = DeliveryController
+module.exports = DeliveryAdminController

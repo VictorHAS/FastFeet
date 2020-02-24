@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "test": "nyc --reporter=text-summary node ace test"
+    "test": "nyc node ace test",
+    "test-summary": "nyc --reporter=text-summary node ace test"
   },
   "keywords": [
     "adonisjs",
@@ -39,9 +40,12 @@
     "@adonisjs/ignitor": "^2.0.8",
     "@adonisjs/lucid": "^6.1.3",
     "@adonisjs/mail": "^3.0.10",
+    "@adonisjs/redis": "^2.0.7",
     "@adonisjs/validator": "^5.0.6",
     "@adonisjs/vow": "^1.0.17",
+    "@rocketseat/adonis-bull": "^0.2.1",
     "adonis-acl": "^1.1.1",
+    "date-fns": "^2.9.0",
     "pg": "^7.18.1"
   },
   "devDependencies": {

@@ -24,7 +24,7 @@ class SessionController {
       return response.json(token)
     } catch (err) {
       return response.status(err.status).send({
-        error: { message: 'Email ou senha incorreta' }
+        error: { message: "Email or password doesn't match" }
       })
     }
   }

@@ -21,7 +21,9 @@ const providers = [
   '@adonisjs/validator/providers/ValidatorProvider',
   'adonis-acl/providers/AclProvider',
   '@adonisjs/antl/providers/AntlProvider',
-  '@adonisjs/mail/providers/MailProvider'
+  '@adonisjs/mail/providers/MailProvider',
+  '@adonisjs/redis/providers/RedisProvider',
+  '@rocketseat/adonis-bull/providers/Bull'
 ]
 
 /*
