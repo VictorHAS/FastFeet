@@ -118,11 +118,18 @@ test('it should be able to update deliveryman informations', async ({
 }) => {
   const deliveryman = await Factory.model('App/Models/Deliveryman').create()
 
+  const avatar = await client
+    .post('/file')
+    .loginVia(adminUser, 'jwt')
+    .attach('file', Helpers.tmpPath('test/avatar.png'))
+    .end()
+
   const response = await client
     .put(`/deliveryman/${deliveryman.id}`)
     .loginVia(adminUser, 'jwt')
     .send({
       name: 'Victor',
+      avatar_id: avatar.body.id,
       email: 'victor@deliveryman.com'
     })
     .end()
@@ -130,23 +137,8 @@ test('it should be able to update deliveryman informations', async ({
   response.assertStatus(200)
   assert.equal(response.body.name, 'Victor')
   assert.equal(response.body.email, 'victor@deliveryman.com')
+  assert.equal(response.body.avatar.id, avatar.body.id)
   assert.equal(response.body.id, deliveryman.id)
-})
-
-test('it should be able to update deliveryman avatar', async ({
-  assert,
-  client
-}) => {
-  const deliveryman = await Factory.model('App/Models/Deliveryman').create()
-  const response = await client
-    .put(`/deliveryman/${deliveryman.id}`)
-    .loginVia(adminUser, 'jwt')
-    .attach('avatar', Helpers.tmpPath('test/avatar.png'))
-    .end()
-
-  response.assertStatus(200)
-  assert.exists(response.body.avatar.name)
-  assert.exists(response.body.avatar.path)
 })
 
 test('it should be able to delete a deliveryman', async ({

@@ -22,7 +22,7 @@ class FileController {
 
     const fileModel = await File.create({
       name: file.fileName,
-      path: `${Env.get('APP_URL')}${file.fileName}`
+      path: `${Env.get('APP_URL')}/files/${file.fileName}`
     })
 
     return fileModel

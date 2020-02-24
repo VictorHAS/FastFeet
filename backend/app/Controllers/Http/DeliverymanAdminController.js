@@ -4,11 +4,11 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 
+/** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Deliveryman = use('App/Models/Deliveryman')
-const Helpers = use('Helpers')
+/** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const File = use('App/Models/File')
 
-const Env = use('Env')
 /**
  * Resourceful controller for interacting with deliverymen
  */
@@ -51,7 +51,17 @@ class DeliverymanAdminController {
    * @param {Response} ctx.response
    */
   async store({ request, response }) {
-    const data = request.only(['name', 'avatar_id', 'email'])
+    const { avatar_id, ...data } = request.only(['name', 'avatar_id', 'email'])
+
+    if (avatar_id) {
+      try {
+        await File.findOrFail(avatar_id)
+      } catch (err) {
+        return response
+          .status(err.status)
+          .send({ error: { message: 'Avatar not found' } })
+      }
+    }
 
     const deliveryman = await Deliveryman.create(data)
 
@@ -67,12 +77,18 @@ class DeliverymanAdminController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show({ params }) {
-    const deliveryman = await Deliveryman.find(params.id)
+  async show({ params, response }) {
+    try {
+      const deliveryman = await Deliveryman.findOrFail(params.id)
 
-    await deliveryman.load('avatar')
+      await deliveryman.load('avatar')
 
-    return deliveryman
+      return deliveryman
+    } catch (err) {
+      return response
+        .status(err.status)
+        .send({ error: { message: 'Deliveryman not found' } })
+    }
   }
 
   /**
@@ -84,29 +100,16 @@ class DeliverymanAdminController {
    * @param {Response} ctx.response
    */
   async update({ params, request, response }) {
-    const data = request.only(['name', 'email'])
-    const avatar = request.file('avatar', {
-      types: ['image'],
-      size: '2mb'
-    })
-    const deliveryman = await Deliveryman.findOrFail(params.id)
+    const data = request.only(['name', 'email', 'avatar_id'])
 
-    if (avatar) {
-      await avatar.move(Helpers.tmpPath('uploads'), {
-        name: `${new Date().getTime()}.${avatar.subtype}`
-      })
+    const deliveryman = await Deliveryman.find(params.id)
 
-      if (!avatar.moved()) {
-        return avatar.error()
-      }
-
-      const avatarId = await File.create({
-        name: avatar.fileName,
-        path: `${Env.get('APP_URL')}/files/${avatar.fileName}`
-      })
-
-      deliveryman.avatar_id = avatarId.id
+    if (!deliveryman) {
+      return response
+        .status(404)
+        .send({ error: { message: 'Deliveryman not found' } })
     }
+
     deliveryman.merge(data)
 
     await deliveryman.save()
@@ -123,10 +126,16 @@ class DeliverymanAdminController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy({ params }) {
-    const deliveryman = await Deliveryman.find(params.id)
+  async destroy({ params, response }) {
+    try {
+      const deliveryman = await Deliveryman.findOrFail(params.id)
 
-    await deliveryman.delete()
+      await deliveryman.delete()
+    } catch (err) {
+      return response
+        .status(err.status)
+        .send({ error: { message: 'Deliveryman not found' } })
+    }
   }
 }
 

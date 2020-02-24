@@ -69,10 +69,16 @@ class RecipientAdminController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show({ params }) {
-    const delivery = await Recipient.find(params.id)
+  async show({ params, response }) {
+    try {
+      const delivery = await Recipient.findOrFail(params.id)
 
-    return delivery
+      return delivery
+    } catch (err) {
+      return response
+        .status(err.status)
+        .send({ error: { message: 'Recipient not found' } })
+    }
   }
 
   /**
@@ -83,7 +89,7 @@ class RecipientAdminController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update({ params, request }) {
+  async update({ params, request, response }) {
     const data = request.only([
       'name',
       'street',
@@ -93,12 +99,18 @@ class RecipientAdminController {
       'zip_code'
     ])
 
-    const recipient = await Recipient.find(params.id)
+    try {
+      const recipient = await Recipient.findOrFail(params.id)
 
-    recipient.merge(data)
-    await recipient.save()
+      recipient.merge(data)
+      await recipient.save()
 
-    return recipient
+      return recipient
+    } catch (err) {
+      return response
+        .status(err.status)
+        .send({ error: { message: 'Recipient not found' } })
+    }
   }
 
   /**
@@ -109,10 +121,16 @@ class RecipientAdminController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy({ params }) {
-    const recipient = await Recipient.find(params.id)
+  async destroy({ params, response }) {
+    try {
+      const recipient = await Recipient.findOrFail(params.id)
 
-    await recipient.delete()
+      await recipient.delete()
+    } catch (err) {
+      return response
+        .status(err.status)
+        .send({ error: { message: 'Recipient not found' } })
+    }
   }
 }
 

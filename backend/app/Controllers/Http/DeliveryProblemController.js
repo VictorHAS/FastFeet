@@ -40,8 +40,16 @@ class DeliveryProblemController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store({ params, request }) {
+  async store({ params, request, response }) {
     const description = request.input('description')
+
+    const delivery = await Delivery.find(params.id)
+    if (!delivery) {
+      return response
+        .status(404)
+        .send({ error: { message: 'Delivery not found' } })
+    }
+
     const problem = await DeliveryProblem.create({
       description,
       delivery_id: params.id
@@ -76,25 +84,41 @@ class DeliveryProblemController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy({ params }) {
+  async destroy({ params, response }) {
     const problem = await DeliveryProblem.find(params.id)
+    if (!problem) {
+      return response
+        .status(404)
+        .send({ error: { message: 'Problem not found' } })
+    }
+
     const delivery = await Delivery.query()
       .where('id', problem.delivery_id)
       .with('deliveryman')
       .first()
+
+    if (!delivery) {
+      return response
+        .status(404)
+        .send({ error: { message: 'Delivery not found' } })
+    }
 
     delivery.canceled_at = new Date()
 
     await delivery.save()
     const deliveryJson = delivery.toJSON()
 
-    Bull.add(Job.key, {
-      product: delivery.product,
-      description: problem.description,
-      deliveryman: deliveryJson.deliveryman.name,
-      to: deliveryJson.deliveryman.email,
-      id: deliveryJson.id
-    })
+    Bull.add(
+      Job.key,
+      {
+        product: delivery.product,
+        description: problem.description,
+        deliveryman: deliveryJson.deliveryman.name,
+        to: deliveryJson.deliveryman.email,
+        id: deliveryJson.id
+      },
+      { delay: 2000, attempts: 3 }
+    )
   }
 }
 

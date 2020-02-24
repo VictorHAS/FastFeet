@@ -60,6 +60,12 @@ class OrderController {
 
     const delivery = await Delivery.find(params.id)
 
+    if (!delivery) {
+      return response
+        .status(404)
+        .send({ error: { message: 'Delivery not found' } })
+    }
+
     if (start_date) {
       const hour = getHours(parseISO(start_date))
       if (!hour) {
