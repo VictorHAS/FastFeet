@@ -8,7 +8,9 @@
 const DeliveryProblem = use('App/Models/DeliveryProblem')
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Delivery = use('App/Models/Delivery')
-const Mail = use('Mail')
+
+const Bull = use('Rocketseat/Bull')
+const Job = use('App/Jobs/CancelDeliveryEmail')
 
 /**
  * Resourceful controller for interacting with problems in deliveries
@@ -86,20 +88,13 @@ class DeliveryProblemController {
     await delivery.save()
     const deliveryJson = delivery.toJSON()
 
-    await Mail.send(
-      ['emails.cancelation_order'],
-      {
-        product: delivery.product,
-        description: problem.description,
-        deliveryman: deliveryJson.deliveryman.name
-      },
-      message => {
-        message
-          .to(deliveryJson.deliveryman.email)
-          .from('noreply@fastfeet.com.br', 'FastFeet')
-          .subject(`Entrega #${deliveryJson.id} cancelada!`)
-      }
-    )
+    Bull.add(Job.key, {
+      product: delivery.product,
+      description: problem.description,
+      deliveryman: deliveryJson.deliveryman.name,
+      to: deliveryJson.deliveryman.email,
+      id: deliveryJson.id
+    })
   }
 }
 

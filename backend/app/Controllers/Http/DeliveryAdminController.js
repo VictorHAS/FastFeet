@@ -10,7 +10,10 @@ const Deliveryman = use('App/Models/Deliveryman')
 const Recipient = use('App/Models/Recipient')
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Delivery = use('App/Models/Delivery')
-const Mail = use('Mail')
+
+const Bull = use('Rocketseat/Bull')
+const Job = use('App/Jobs/NewDeliveryEmail')
+
 /**
  * Resourceful controller for interacting with deliveries
  */
@@ -79,19 +82,11 @@ class DeliveryAdminController {
 
     await delivery.loadMany(['deliveryman', 'recipient'])
 
-    await Mail.send(
-      ['emails.new_delivery'],
-      {
-        name: deliveryman.name,
-        product
-      },
-      message => {
-        message
-          .to(deliveryman.email)
-          .from('noreply@fastfeet.com.br', 'FastFeet')
-          .subject('Novo produto disponível para retirada')
-      }
-    )
+    Bull.add(Job.key, {
+      name: deliveryman.name,
+      product,
+      to: deliveryman.email
+    })
 
     return delivery
   }

@@ -3,7 +3,6 @@ const { test, trait, before } = use('Test/Suite')('Admin management')
 /** @type {import('@adonisjs/lucid/src/Factory')} */
 const Factory = use('Factory')
 /** @type {import('@adonisjs/mail/src/Mail')} */
-const Mail = use('Mail')
 const Helpers = use('Helpers')
 const Role = use('Adonis/Acl/Role')
 const Deliveryman = use('App/Models/Deliveryman')
@@ -293,8 +292,6 @@ test("it shouldn't create new delivery, Wrong id recipient", async ({
 })
 
 test('it should create new delivery', async ({ assert, client }) => {
-  Mail.fake()
-
   const recipient = await Factory.model('App/Models/Recipient').create()
   const deliveryman = await Factory.model('App/Models/Deliveryman').create()
 
@@ -310,10 +307,6 @@ test('it should create new delivery', async ({ assert, client }) => {
 
   response.assertStatus(200)
 
-  const recentEmail = Mail.pullRecent()
-  assert.equal(recentEmail.message.to[0].address, deliveryman.email)
-
-  Mail.restore()
   assert.exists(response.body.id)
   assert.equal(response.body.deliveryman.email, deliveryman.email)
   assert.equal(response.body.recipient.name, recipient.name)
@@ -491,8 +484,6 @@ test('it should be able to cancel delivery, and send mail', async ({
   assert,
   client
 }) => {
-  Mail.fake()
-
   const recipient = await Factory.model('App/Models/Recipient').create()
   const deliveryman = await Factory.model('App/Models/Deliveryman').create()
   const delivery = await Factory.model('App/Models/Delivery').create({
@@ -509,11 +500,6 @@ test('it should be able to cancel delivery, and send mail', async ({
     .end()
 
   response.assertStatus(204)
-
-  const recentEmail = Mail.pullRecent()
-  assert.equal(recentEmail.message.to[0].address, deliveryman.email)
-
-  Mail.restore()
 
   const checkDelivery = await Delivery.find(delivery.id)
   assert.isNotNull(checkDelivery.canceled_at)
