@@ -82,11 +82,15 @@ class DeliveryAdminController {
 
     await delivery.loadMany(['deliveryman', 'recipient'])
 
-    Bull.add(Job.key, {
-      name: deliveryman.name,
-      product,
-      to: deliveryman.email
-    })
+    Bull.add(
+      Job.key,
+      {
+        name: deliveryman.name,
+        product,
+        to: deliveryman.email
+      },
+      { delay: 2000, attempts: 3 }
+    )
 
     return delivery
   }
@@ -100,12 +104,18 @@ class DeliveryAdminController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show({ params }) {
-    const delivery = await Delivery.find(params.id)
+  async show({ params, response }) {
+    try {
+      const delivery = await Delivery.findOrFail(params.id)
 
-    await delivery.loadMany(['recipient', 'deliveryman'])
+      await delivery.loadMany(['recipient', 'deliveryman'])
 
-    return delivery
+      return delivery
+    } catch (err) {
+      return response
+        .status(err.status)
+        .send({ error: { message: 'Delivery not found' } })
+    }
   }
 
   /**
@@ -116,15 +126,21 @@ class DeliveryAdminController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update({ params, request }) {
+  async update({ params, request, response }) {
     const data = request.only(['product', 'deliveryman_id', 'recipient_id'])
 
-    const delivery = await Delivery.find(params.id)
-    delivery.merge(data)
-    await delivery.save()
-    await delivery.loadMany(['recipient', 'deliveryman'])
+    try {
+      const delivery = await Delivery.findOrFail(params.id)
+      delivery.merge(data)
+      await delivery.save()
+      await delivery.loadMany(['recipient', 'deliveryman'])
 
-    return delivery
+      return delivery
+    } catch (err) {
+      return request
+        .status(err.status)
+        .send({ error: { message: 'Delivery not found' } })
+    }
   }
 
   /**
@@ -135,10 +151,16 @@ class DeliveryAdminController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy({ params }) {
-    const delivery = await Delivery.find(params.id)
+  async destroy({ params, response }) {
+    try {
+      const delivery = await Delivery.findOrFail(params.id)
 
-    await delivery.delete()
+      await delivery.delete()
+    } catch (err) {
+      return response
+        .status(err.status)
+        .send({ error: { message: 'Delivery not found' } })
+    }
   }
 }
 
