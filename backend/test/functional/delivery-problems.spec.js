@@ -34,6 +34,24 @@ test('it should be able to create new problem in delivery', async ({
   assert.equal(response.body.description, lorem)
 })
 
+test("it shouldn't be able to create new problem in delivery, Not found", async ({
+  assert,
+  client
+}) => {
+  const lorem = 'Lorem, ipsum dolor sit amet consectetur adipisicing elit.'
+
+  const response = await client
+    .post(`/delivery/1/problems`)
+    .send({
+      description: lorem
+    })
+    .end()
+
+  response.assertStatus(404)
+
+  assert.equal(response.body.error.message, 'Delivery not found')
+})
+
 test('it should be able to show all problems with single delivery', async ({
   assert,
   client

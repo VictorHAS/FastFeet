@@ -10,7 +10,14 @@ const Delivery = use('App/Models/Delivery')
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const File = use('App/Models/File')
 
-const { parseISO, getHours, isBefore, isAfter } = require('date-fns')
+const {
+  parseISO,
+  getHours,
+  isBefore,
+  isAfter,
+  startOfDay,
+  endOfDay
+} = require('date-fns')
 
 /**
  * Resourceful controller for interacting with deliveries
@@ -31,6 +38,7 @@ class OrderController {
       delivery = await Delivery.query()
         .where('deliveryman_id', params.id)
         .whereNull('end_date')
+        .whereNull('canceled_at')
         .with('deliveryman')
         .with('recipient')
         .paginate(page || 1)
@@ -38,6 +46,7 @@ class OrderController {
       delivery = await Delivery.query()
         .where('deliveryman_id', params.id)
         .whereNotNull('end_date')
+        .whereNull('canceled_at')
         .with('deliveryman')
         .with('recipient')
         .paginate(page || 1)
@@ -85,6 +94,10 @@ class OrderController {
 
       const orderLength = await Delivery.query()
         .where('deliveryman_id', delivery.deliveryman_id)
+        .whereBetween('start_date', [
+          startOfDay(parseISO(start_date)),
+          endOfDay(parseISO(start_date))
+        ])
         .getCount()
 
       if (orderLength >= 5) {
@@ -98,6 +111,14 @@ class OrderController {
     }
 
     if (end_date) {
+      const hour = getHours(parseISO(end_date))
+
+      if (!hour) {
+        return response.status(401).send({
+          error: { message: 'Invalid date!' }
+        })
+      }
+
       if (!signature_id) {
         return response.status(401).send({
           error: { message: 'Signature not provided' }

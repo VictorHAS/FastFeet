@@ -1,6 +1,6 @@
 'use strict'
 
-const { test, trait } = use('Test/Suite')('Deliveryman')
+const { test, trait } = use('Test/Suite')('Order')
 
 /** @type {import('@adonisjs/lucid/src/Factory')} */
 const Factory = use('Factory')
@@ -82,6 +82,21 @@ test('it should be able to update start_date', async ({ assert, client }) => {
   assert.equal(response.body.start_date, start_date)
 })
 
+test("it shouldn't be able to manage delivery, Not found!", async ({
+  assert,
+  client
+}) => {
+  const start_date = '2020-02-22T2:29:38.291Z'
+
+  const response = await client
+    .put(`/deliveryman/deliveries/2`)
+    .header('start_date', start_date)
+    .end()
+
+  response.assertStatus(404)
+  assert.equal(response.body.error.message, 'Delivery not found')
+})
+
 test("it shouldn't be able to update start_date, Invalid date!", async ({
   assert,
   client
@@ -98,6 +113,39 @@ test("it shouldn't be able to update start_date, Invalid date!", async ({
   const response = await client
     .put(`/deliveryman/deliveries/${delivery.id}`)
     .header('start_date', start_date)
+    .end()
+
+  response.assertStatus(401)
+  assert.equal(response.body.error.message, 'Invalid date!')
+})
+
+test("it shouldn't be able to update end_date, Invalid date!", async ({
+  assert,
+  client
+}) => {
+  const recipient = await Factory.model('App/Models/Recipient').create()
+  const deliveryman = await Factory.model('App/Models/Deliveryman').create()
+  const delivery = await Factory.model('App/Models/Delivery').create({
+    deliveryman_id: deliveryman.id,
+    recipient_id: recipient.id,
+    start_date: '2020-02-22T18:00:00.000Z'
+  })
+
+  const end_date = '2020-02-22T1:00:00.000Z'
+
+  const signature = await client
+    .post('/file')
+    .attach('file', Helpers.tmpPath('test/avatar.png'))
+    .end()
+
+  signature.assertStatus(200)
+
+  const response = await client
+    .put(`/deliveryman/deliveries/${delivery.id}`)
+    .header('end_date', end_date)
+    .send({
+      signature_id: signature.body.id
+    })
     .end()
 
   response.assertStatus(401)
@@ -135,15 +183,34 @@ test("it shouldn't be able to update start_date, limit of 5 withdrawals", async 
 }) => {
   const recipient = await Factory.model('App/Models/Recipient').create()
   const deliveryman = await Factory.model('App/Models/Deliveryman').create()
-  const delivery = await Factory.model('App/Models/Delivery').createMany(5, {
+  const delivery = await Factory.model('App/Models/Delivery').create({
     deliveryman_id: deliveryman.id,
     recipient_id: recipient.id
   })
 
+  const adminUser = await Factory.model('App/Models/User').create()
+  await adminUser.roles().attach([1])
+
   const start_date = '2020-02-22T18:29:38.291Z'
 
+  for (let i = 1; i <= 5; i++) {
+    const response = await client
+      .post('/delivery')
+      .loginVia(adminUser, 'jwt')
+      .send({
+        product: 'Produto test',
+        deliveryman_id: deliveryman.id,
+        recipient_id: recipient.id
+      })
+      .end()
+    await client
+      .put(`/deliveryman/deliveries/${response.body.id}`)
+      .header('start_date', start_date)
+      .end()
+  }
+
   const response = await client
-    .put(`/deliveryman/deliveries/${delivery[0].id}`)
+    .put(`/deliveryman/deliveries/${delivery.id}`)
     .header('start_date', start_date)
     .end()
 

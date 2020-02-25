@@ -63,9 +63,15 @@ class DeliverymanAdminController {
       }
     }
 
-    const deliveryman = await Deliveryman.create(data)
+    try {
+      const deliveryman = await Deliveryman.create(data)
 
-    return response.status(201).json(deliveryman)
+      return deliveryman
+    } catch (err) {
+      return response.status(401).send({
+        error: { message: 'Already exist Deliveryman with this name or email' }
+      })
+    }
   }
 
   /**

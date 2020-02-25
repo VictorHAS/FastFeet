@@ -52,7 +52,7 @@ class DeliveryProblemController {
 
     const problem = await DeliveryProblem.create({
       description,
-      delivery_id: params.id
+      delivery_id: delivery.id
     })
 
     return problem
@@ -96,12 +96,6 @@ class DeliveryProblemController {
       .where('id', problem.delivery_id)
       .with('deliveryman')
       .first()
-
-    if (!delivery) {
-      return response
-        .status(404)
-        .send({ error: { message: 'Delivery not found' } })
-    }
 
     delivery.canceled_at = new Date()
 

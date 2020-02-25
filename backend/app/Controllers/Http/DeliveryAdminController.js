@@ -137,7 +137,7 @@ class DeliveryAdminController {
 
       return delivery
     } catch (err) {
-      return request
+      return response
         .status(err.status)
         .send({ error: { message: 'Delivery not found' } })
     }
