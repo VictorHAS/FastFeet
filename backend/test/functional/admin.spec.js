@@ -78,7 +78,7 @@ test('it should be able to create new deliveryman if not exists with avatar', as
     })
     .end()
 
-  response.assertStatus(201)
+  response.assertStatus(200)
   assert.exists(response.body.id)
 })
 
@@ -139,6 +139,54 @@ test('it should be able to update deliveryman informations', async ({
   assert.equal(response.body.email, 'victor@deliveryman.com')
   assert.equal(response.body.avatar.id, avatar.body.id)
   assert.equal(response.body.id, deliveryman.id)
+})
+
+test("it shouldn't be able to create deliveryman, Wrong avatar id", async ({
+  assert,
+  client
+}) => {
+  const response = await client
+    .post(`/deliveryman/`)
+    .loginVia(adminUser, 'jwt')
+    .send({
+      name: 'Victor',
+      avatar_id: 1,
+      email: 'victor@deliveryman.com'
+    })
+    .end()
+
+  response.assertStatus(404)
+  assert.equal(response.body.error.message, 'Avatar not found')
+})
+
+test("it shouldn't be able to create deliveryman, Already exist Deliveryman", async ({
+  assert,
+  client
+}) => {
+  const deliveryman_1 = await client
+    .post(`/deliveryman`)
+    .loginVia(adminUser, 'jwt')
+    .send({
+      name: 'Victor',
+      email: 'victor@deliveryman.com'
+    })
+    .end()
+  deliveryman_1.assertStatus(200)
+
+  const deliveryman_2 = await client
+    .post(`/deliveryman`)
+    .loginVia(adminUser, 'jwt')
+    .send({
+      name: 'Victor',
+      email: 'victor@deliveryman.com'
+    })
+    .end()
+
+  deliveryman_2.assertStatus(401)
+  assert.equal(
+    deliveryman_2.body.error.message,
+    'Already exist Deliveryman with this name or email'
+  )
 })
 
 test('it should be able to delete a deliveryman', async ({
@@ -495,4 +543,95 @@ test('it should be able to cancel delivery, and send mail', async ({
 
   const checkDelivery = await Delivery.find(delivery.id)
   assert.isNotNull(checkDelivery.canceled_at)
+})
+test("it shouldn't be able to cancel delivery, Problem not found", async ({
+  assert,
+  client
+}) => {
+  const response = await client
+    .delete(`/problem/1/cancel-delivery`)
+    .loginVia(adminUser, 'jwt')
+    .end()
+
+  response.assertStatus(404)
+
+  assert.equal(response.body.error.message, 'Problem not found')
+})
+
+test("it shouldn't be able to show/update/delete a deliveryman, Not found error", async ({
+  assert,
+  client
+}) => {
+  const show = await client
+    .get(`/deliveryman/1`)
+    .loginVia(adminUser, 'jwt')
+    .end()
+  show.assertStatus(404)
+  assert.equal(show.body.error.message, 'Deliveryman not found')
+
+  const update = await client
+    .put(`/deliveryman/1`)
+    .loginVia(adminUser, 'jwt')
+    .end()
+  update.assertStatus(404)
+  assert.equal(update.body.error.message, 'Deliveryman not found')
+
+  const remove = await client
+    .delete(`/deliveryman/1`)
+    .loginVia(adminUser, 'jwt')
+    .end()
+  remove.assertStatus(404)
+  assert.equal(remove.body.error.message, 'Deliveryman not found')
+})
+
+test("it shouldn't be able to show/update/delete a recipient, Not found error", async ({
+  assert,
+  client
+}) => {
+  const show = await client
+    .get(`/recipient/1`)
+    .loginVia(adminUser, 'jwt')
+    .end()
+  show.assertStatus(404)
+  assert.equal(show.body.error.message, 'Recipient not found')
+
+  const update = await client
+    .put(`/recipient/1`)
+    .loginVia(adminUser, 'jwt')
+    .end()
+  update.assertStatus(404)
+  assert.equal(update.body.error.message, 'Recipient not found')
+
+  const remove = await client
+    .delete(`/recipient/1`)
+    .loginVia(adminUser, 'jwt')
+    .end()
+  remove.assertStatus(404)
+  assert.equal(remove.body.error.message, 'Recipient not found')
+})
+
+test("it shouldn't be able to show/update/delete a delivery, Not found error", async ({
+  assert,
+  client
+}) => {
+  const show = await client
+    .get(`/delivery/1`)
+    .loginVia(adminUser, 'jwt')
+    .end()
+  show.assertStatus(404)
+  assert.equal(show.body.error.message, 'Delivery not found')
+
+  const update = await client
+    .put(`/delivery/1`)
+    .loginVia(adminUser, 'jwt')
+    .end()
+  update.assertStatus(404)
+  assert.equal(update.body.error.message, 'Delivery not found')
+
+  const remove = await client
+    .delete(`/delivery/1`)
+    .loginVia(adminUser, 'jwt')
+    .end()
+  remove.assertStatus(404)
+  assert.equal(remove.body.error.message, 'Delivery not found')
 })
